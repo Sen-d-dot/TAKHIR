@@ -12,15 +12,25 @@ export default function Home() {
 
     useEffect(() => {
         API.get('/companies')
-            .then(res => setCompanies(res.data.data || res.data))
-            .catch(err => console.error("Gagal memuat data:", err));
+            .then(res => {
+                // Pastikan data yang dimasukkan ke state SELALU berupa Array
+                const result = res.data.data || res.data;
+                setCompanies(Array.isArray(result) ? result : []);
+            })
+            .catch(err => {
+                console.error("Gagal memuat data:", err);
+                setCompanies([]); // Set jadi array kosong jika error
+            });
     }, []);
 
     useEffect(() => {
         setCurrentPage(1);
     }, [search, category]);
 
-    const filteredData = companies.filter(c => {
+    // Proteksi tambahan menggunakan Array.isArray agar tidak pernah crash
+    const safeCompanies = Array.isArray(companies) ? companies : [];
+
+    const filteredData = safeCompanies.filter(c => {
         const matchCategory = category === 'Semua' || c.category_name === category;
         const matchSearch = c.name ? c.name.toLowerCase().includes(search.toLowerCase()) : false;
         return matchCategory && matchSearch;
@@ -193,9 +203,9 @@ export default function Home() {
             </div>
 
             {/* Komponen ContactUs */}
-<div className="max-w-[1000px] mx-auto">
-    <ContactUs />
-</div>
+            <div className="max-w-[1000px] mx-auto">
+                <ContactUs />
+            </div>
         </div>
     );
 }
